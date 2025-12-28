@@ -1,310 +1,301 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>In What Order? – Raw Manta Ray</title>
+
 <style>
 :root {
-  --bg: #1E2A3A;
-  --panel: #28344B;
-  --text: #F3F4F6;
-  --accent: #FFD700;
-  --blue: #60A5FA;
-  --green: #22C55E;
-  --yellow: #FACC15;
-  --red: #EF4444;
+  --bg-dark: #1e2a3a;
+  --bg-panel: #28344b;
+  --yellow: #ffd700;
+  --blue: #60a5fa;
+  --text: #f3f4f6;
 }
-
-* { box-sizing: border-box; }
 
 body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: var(--bg);
+  font-family: "Trebuchet MS", Arial, sans-serif;
+  background: var(--bg-dark);
   color: var(--text);
-  height: 100vh;
-  overflow: hidden;
+  padding: 20px;
 }
 
-header {
+.container {
+  max-width: 780px;
+  margin: auto;
+}
+
+.header {
   text-align: center;
-  padding: 12px;
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--accent);
+  background: linear-gradient(90deg, var(--yellow), #ffef8a);
+  color: #1b1b1b;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 0 #bfa600;
+  margin-bottom: 16px;
 }
 
-main {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  height: calc(100vh - 64px);
+.header h1 {
+  margin: 0;
+  font-size: 2.4em;
+}
+
+.header h2 {
+  margin: 6px 0 0;
+  font-size: 1.2em;
 }
 
 .instructions {
-  padding: 16px;
-  background: var(--panel);
-  font-size: 14px;
-}
-
-.instructions h2 {
-  margin-top: 0;
-  color: var(--accent);
-}
-
-.game-area {
-  padding: 16px;
-  position: relative;
-}
-
-.question {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.timer {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  background: var(--panel);
-  padding: 12px 18px;
-  font-size: 32px;
-  font-weight: 900;
-  border-radius: 12px;
-  color: var(--accent);
-  z-index: 1000;
-}
-
-.controls {
+  text-align: center;
+  font-style: italic;
+  color: #c7d2fe;
   margin-bottom: 10px;
 }
 
-button {
-  background: var(--accent);
-  border: none;
-  padding: 8px 14px;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 6px;
-  cursor: pointer;
+.timer {
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+  color: var(--yellow);
+  margin-bottom: 10px;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+h3 {
+  text-align: center;
+  margin: 12px 0;
+}
+
+.list {
+  border: 3px solid var(--yellow);
+  background: var(--bg-panel);
+  border-radius: 14px;
+  padding: 6px 10px;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #1f2937;
-  margin-bottom: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  background: #1f293b;
+  border: 2px solid #334155;
+  padding: 4px 10px;
+  margin: 6px 0;
+  border-radius: 10px;
   cursor: grab;
-  border: 2px solid transparent;
+  height: 52px;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
+
+.item:active { cursor: grabbing; }
 
 .item img {
   width: 36px;
   height: 36px;
-  object-fit: contain;
+  margin-right: 10px;
 }
 
-.item.green { border-color: var(--green); box-shadow: 0 0 10px var(--green); }
-.item.yellow { border-color: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
-.item.red { border-color: var(--red); box-shadow: 0 0 10px var(--red); }
-
-.scorecard {
-  margin-top: 12px;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--accent);
+.correct {
+  border-color: #22c55e;
+  box-shadow: 0 0 12px #22c55e;
 }
 
-canvas {
+.partial {
+  border-color: #facc15;
+  box-shadow: 0 0 12px #facc15;
+}
+
+.wrong {
+  border-color: #ef4444;
+  box-shadow: 0 0 12px #ef4444;
+}
+
+button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--yellow);
+  color: #1b1b1b;
+  font-weight: bold;
+  font-size: 1.05em;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #bfa600;
+}
+
+#result {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.confetti {
   position: fixed;
-  inset: 0;
-  pointer-events: none;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  animation: fall 3s linear forwards;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
 }
 </style>
 </head>
-<body>
 
-<header>In What Order? – Raw Manta Ray</header>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>In What Order?</h1>
+  <h2>Raw Manta Ray</h2>
+</div>
+
+<div class="instructions">
+  Sort the updates from <strong>earliest to latest</strong>.  
+  Incorrect submissions remove 5 seconds.
+</div>
 
 <div class="timer" id="timer">48</div>
 
-<main>
-  <aside class="instructions">
-    <h2>Instructions</h2>
-    <p>Order the updates from <strong>earliest to latest</strong>.</p>
-    <p>You may submit multiple times.</p>
-    <p>Each incorrect submission costs <strong>5 seconds</strong>.</p>
-    <p>Yellow = correct relative order.<br>Green = fully correct.</p>
-  </aside>
+<h3>In what order of content updates did more sources for raw manta rays get added into the game?</h3>
 
-  <section class="game-area">
-    <div class="question">
-      In what order of content updates did more sources for raw manta rays get added into the game?
-    </div>
+<div id="list" class="list"></div>
 
-    <div class="controls">
-      <button id="startBtn">Start Game</button>
-      <button id="submitBtn" disabled>Submit</button>
-    </div>
+<button id="startBtn">Start Game</button>
+<button id="submitBtn" disabled>Submit</button>
 
-    <ul id="list"></ul>
+<div id="result"></div>
 
-    <div class="scorecard" id="scorecard"></div>
-  </section>
-</main>
-
-<canvas id="confetti"></canvas>
+</div>
 
 <script>
-const data = [
- { id:1, name:"Fossil Island", date:"September 2017", img:"https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132"},
- { id:2, name:"Brimstone Chest", date:"February 2019", img:"https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463"},
- { id:3, name:"The Mimic", date:"April 2019", img:"https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4"},
- { id:4, name:"Larran’s Chest", date:"June 2019", img:"https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea"},
- { id:5, name:"Tempoross", date:"March 2021", img:"https://oldschool.runescape.wiki/images/Tempoross.png?12042"},
- { id:6, name:"Tombs of Amascut", date:"August 2022", img:"https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992"},
- { id:7, name:"The Leviathan", date:"July/August 2023", img:"https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a"},
- { id:8, name:"Killing a Manta Ray", date:"November 2025", img:"https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30"}
+const correctOrder = [
+  { name:"Fossil Island", date:"September 2017", img:"https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132" },
+  { name:"Brimstone Chest", date:"February 2019", img:"https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463" },
+  { name:"The Mimic", date:"April 2019", img:"https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4" },
+  { name:"Larran’s Chest", date:"June 2019", img:"https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea" },
+  { name:"Tempoross", date:"March 2021", img:"https://oldschool.runescape.wiki/images/Tempoross.png?12042" },
+  { name:"Tombs of Amascut", date:"August 2022", img:"https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992" },
+  { name:"The Leviathan", date:"July / August 2023", img:"https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a" },
+  { name:"Killing a Manta Ray", date:"November 2025", img:"https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30" }
 ];
 
 const list = document.getElementById("list");
 const timerEl = document.getElementById("timer");
-const scorecard = document.getElementById("scorecard");
+const result = document.getElementById("result");
+const startBtn = document.getElementById("startBtn");
+const submitBtn = document.getElementById("submitBtn");
 
 let time = 48;
-let interval;
-let started = false;
-let ended = false;
+let timer;
+let gameOver = false;
 let datesShown = false;
 
 function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
 
 function render(items){
- list.innerHTML="";
- items.forEach(i=>{
-  const li=document.createElement("li");
-  li.className="item";
-  li.draggable=started && !ended;
-  li.dataset.id=i.id;
-  li.innerHTML=`<img src="${i.img}"><span>${i.name}</span>`;
-  list.appendChild(li);
- });
- enableDrag();
+  list.innerHTML="";
+  items.forEach(i=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.draggable=true;
+    d.dataset.name=i.name;
+    d.innerHTML=`<img src="${i.img}"><span>${i.name}</span>`;
+    list.appendChild(d);
+  });
 }
 
-function enableDrag(){
- let drag;
- list.querySelectorAll(".item").forEach(item=>{
-  item.ondragstart=e=>drag=item;
-  item.ondragover=e=>{
-   e.preventDefault();
-   if(drag!==item){
-     const r=item.getBoundingClientRect();
-     const after=e.clientY>r.top+r.height/2;
-     list.insertBefore(drag, after?item.nextSibling:item);
-   }
-  };
- });
-}
-
-function evaluate(){
- const items=[...list.children];
- let greens=0, yellows=0;
- items.forEach((el,idx)=>{
-  el.classList.remove("green","yellow","red");
-  const correctIdx=data.findIndex(d=>d.id==el.dataset.id);
-  if(correctIdx===idx){ el.classList.add("green"); greens++; }
-  else {
-   let ok=true;
-   items.forEach((o,j)=>{
-    if(j===idx) return;
-    const ci=data.findIndex(d=>d.id==o.dataset.id);
-    if((ci<correctIdx && j>idx)||(ci>correctIdx && j<idx)) ok=false;
-   });
-   el.classList.add(ok?"yellow":"red");
-   if(ok) yellows++;
-  }
- });
- return {greens,yellows};
-}
-
-function showDates(){
- if(datesShown) return;
- [...list.children].forEach(el=>{
-  const d=data.find(i=>i.id==el.dataset.id);
-  el.querySelector("span").textContent+=` — ${d.date}`;
- });
- datesShown=true;
-}
-
-function endGame(win){
- ended=true;
- clearInterval(interval);
- document.getElementById("submitBtn").disabled=true;
- showDates();
-
- const {greens,yellows}=evaluate();
- const correctness=(greens+yellows)*10;
- const timeScore=Math.min(time,20);
- const score=correctness+timeScore;
-
- scorecard.textContent=`Final Score: ${score}/100`;
-
- if(win) confetti();
-}
-
-document.getElementById("startBtn").onclick=()=>{
- if(started) return;
- started=true;
- render(shuffle(data));
- document.getElementById("submitBtn").disabled=false;
- interval=setInterval(()=>{
-  time--;
-  timerEl.textContent=time;
-  if(time<=0) endGame(false);
- },1000);
+startBtn.onclick=()=>{
+  render(shuffle(correctOrder));
+  startBtn.disabled=true;
+  submitBtn.disabled=false;
+  timer=setInterval(()=>{
+    time--;
+    timerEl.textContent=time;
+    if(time<=0) endGame(false);
+  },1000);
 };
 
-document.getElementById("submitBtn").onclick=()=>{
- if(ended) return;
- const {greens}=evaluate();
- if(greens===data.length){
-   endGame(true);
- } else {
-   time=Math.max(0,time-5);
-   timerEl.textContent=time;
- }
+let dragged=null;
+document.addEventListener("dragstart",e=>{
+  if(e.target.classList.contains("item")) dragged=e.target;
+});
+document.addEventListener("dragover",e=>{
+  e.preventDefault();
+  const t=e.target.closest(".item");
+  if(t && t!==dragged){
+    const r=t.getBoundingClientRect();
+    list.insertBefore(dragged, e.clientY-r.top>r.height/2 ? t.nextSibling : t);
+  }
+});
+
+function endGame(won){
+  clearInterval(timer);
+  gameOver=true;
+  [...list.children].forEach(i=>i.draggable=false);
+  revealDates();
+  result.innerHTML = won ? "🏆 Perfect! Score: 100" : "⏱️ Time’s up!";
+}
+
+function revealDates(){
+  if(datesShown) return;
+  datesShown=true;
+  [...list.children].forEach(el=>{
+    const d=correctOrder.find(o=>o.name===el.dataset.name);
+    el.querySelector("span").textContent=`${d.name} — ${d.date}`;
+  });
+}
+
+submitBtn.onclick=()=>{
+  if(gameOver) return;
+  let items=[...list.children].map(i=>i.dataset.name);
+  let correct=correctOrder.map(o=>o.name);
+
+  let inversions=0, max=0;
+  for(let i=0;i<correct.length;i++){
+    for(let j=i+1;j<correct.length;j++){
+      max++;
+      if(items.indexOf(correct[i]) < items.indexOf(correct[j])) inversions++;
+    }
+  }
+
+  [...list.children].forEach((el,i)=>{
+    el.classList.remove("correct","partial","wrong");
+    const name=el.dataset.name;
+    const idx=correct.indexOf(name);
+    if(idx===i) el.classList.add("correct");
+    else {
+      let ok=true;
+      for(let j=0;j<correct.length;j++){
+        if(j===idx) continue;
+        if((idx<j)!==(items.indexOf(name)<items.indexOf(correct[j]))) ok=false;
+      }
+      el.classList.add(ok?"partial":"wrong");
+    }
+  });
+
+  if(inversions===max){
+    confetti();
+    endGame(true);
+  } else {
+    time=Math.max(0,time-5);
+    timerEl.textContent=time;
+  }
 };
 
 function confetti(){
- const c=document.getElementById("confetti");
- const ctx=c.getContext("2d");
- c.width=innerWidth; c.height=innerHeight;
- let pieces=[...Array(150)].map(()=>({
-  x:Math.random()*c.width,
-  y:Math.random()*-c.height,
-  r:Math.random()*6+4,
-  vy:Math.random()*3+2
- }));
- let t=0;
- (function draw(){
-  ctx.clearRect(0,0,c.width,c.height);
-  pieces.forEach(p=>{
-   ctx.fillStyle=["#FFD700","#22C55E","#60A5FA"][Math.floor(Math.random()*3)];
-   ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
-   p.y+=p.vy;
-  });
-  if(t++<120) requestAnimationFrame(draw);
- })();
+  for(let i=0;i<120;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=Math.random()>0.5?"#ffd700":"#60a5fa";
+    c.style.animationDuration=(Math.random()*1.5+2)+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),3000);
+  }
 }
 </script>
 </body>

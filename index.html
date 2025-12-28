@@ -31,8 +31,15 @@
     margin-bottom: 20px;
   }
 
+  .direction {
+    text-align: center;
+    font-size: 0.95em;
+    margin-bottom: 10px;
+    color: #a5b4fc;
+  }
+
   .container {
-    max-width: 750px;
+    max-width: 760px;
     margin: auto;
   }
 
@@ -47,18 +54,35 @@
     display: flex;
     align-items: center;
     background: #1e293b;
-    border: 1px solid #334155;
+    border: 2px solid #334155;
     padding: 10px 12px;
-    margin: 8px 0;
-    border-radius: 8px;
+    margin: 10px 0;
+    border-radius: 10px;
     cursor: grab;
+    transition: border-color 0.3s, box-shadow 0.3s;
   }
 
   .item img {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     margin-right: 12px;
     object-fit: contain;
+  }
+
+  /* Glow states */
+  .correct {
+    border-color: #22c55e;
+    box-shadow: 0 0 12px #22c55e;
+  }
+
+  .partial {
+    border-color: #facc15;
+    box-shadow: 0 0 12px #facc15;
+  }
+
+  .wrong {
+    border-color: #ef4444;
+    box-shadow: 0 0 12px #ef4444;
   }
 
   button {
@@ -97,7 +121,11 @@
   </div>
 
   <div class="instructions">
-    Sort the content updates in order of when they happened.
+    Sort the content updates from <strong>earliest to latest</strong> based on when they happened.
+  </div>
+
+  <div class="direction">
+    ⬆️ Earliest &nbsp;&nbsp;&nbsp;&nbsp;↓ Latest
   </div>
 
   <div id="list" class="list"></div>
@@ -109,60 +137,34 @@
 
 <script>
 const correctOrder = [
-  {
-    text: "Fossil Island — September 2017",
-    img: "https://oldschool.runescape.wiki/w/Fossil_Island#/media/File:Fossil_Island_logo.png"
-  },
-  {
-    text: "Brimstone Chest — February 2019",
-    img: "https://oldschool.runescape.wiki/w/Brimstone_chest#/media/File:Brimstone_chest.png"
-  },
-  {
-    text: "The Mimic — April 2019",
-    img: "https://oldschool.runescape.wiki/w/The_Mimic#/media/File:The_Mimic.png"
-  },
-  {
-    text: "Larran’s Chest — June 2019",
-    img: "https://oldschool.runescape.wiki/w/Larran%27s_big_chest#/media/File:Larran's_big_chest.png"
-  },
-  {
-    text: "Tempoross — March 2021",
-    img: "https://oldschool.runescape.wiki/w/Tempoross#/media/File:Tempoross.png"
-  },
-  {
-    text: "Tombs of Amascut — August 2022",
-    img: "https://oldschool.runescape.wiki/w/Tombs_of_Amascut#/media/File:Tombs_of_Amascut.png"
-  },
-  {
-    text: "The Leviathan — July/August 2023",
-    img: "https://oldschool.runescape.wiki/w/The_Leviathan#/media/File:The_Leviathan.png"
-  },
-  {
-    text: "Killing a Manta Ray — November 2025",
-    img: "https://oldschool.runescape.wiki/w/Manta_ray_(monster)#/media/File:Manta_ray_(Sailing).png"
-  }
+  { name: "Fossil Island", date: "September 2017", img: "https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132" },
+  { name: "Brimstone Chest", date: "February 2019", img: "https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463" },
+  { name: "The Mimic", date: "April 2019", img: "https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4" },
+  { name: "Larran’s Chest", date: "June 2019", img: "https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea" },
+  { name: "Tempoross", date: "March 2021", img: "https://oldschool.runescape.wiki/images/Tempoross.png?12042" },
+  { name: "Tombs of Amascut", date: "August 2022", img: "https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992" },
+  { name: "The Leviathan", date: "July / August 2023", img: "https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a" },
+  { name: "Killing a Manta Ray", date: "November 2025", img: "https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30" }
 ];
 
 const list = document.getElementById("list");
 
-// Shuffle items on load
+// Shuffle items
 const shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
 
 shuffled.forEach(item => {
   const div = document.createElement("div");
   div.className = "item";
   div.draggable = true;
-  div.innerHTML = `<img src="${item.img}" alt="${item.text}"><span>${item.text}</span>`;
+  div.dataset.name = item.name;
+  div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span>${item.name}</span>`;
   list.appendChild(div);
 });
 
 let draggedItem = null;
 
-// Drag logic
 document.addEventListener("dragstart", e => {
-  if (e.target.classList.contains("item")) {
-    draggedItem = e.target;
-  }
+  if (e.target.classList.contains("item")) draggedItem = e.target;
 });
 
 document.addEventListener("dragover", e => {
@@ -175,45 +177,50 @@ document.addEventListener("dragover", e => {
   }
 });
 
-// Partial credit scoring
 function checkOrder() {
-  const current = [...list.children].map(el => el.textContent.trim());
-  const correct = correctOrder.map(o => o.text);
+  const items = [...list.children];
+  const current = items.map(el => el.dataset.name);
+  const correctNames = correctOrder.map(o => o.name);
 
   let score = 0;
   let maxScore = 0;
 
-  for (let i = 0; i < correct.length; i++) {
-    for (let j = i + 1; j < correct.length; j++) {
+  // Pairwise scoring
+  for (let i = 0; i < correctNames.length; i++) {
+    for (let j = i + 1; j < correctNames.length; j++) {
       maxScore++;
-
-      const correctBefore = correct.indexOf(correct[i]) < correct.indexOf(correct[j]);
-      const currentBefore = current.indexOf(correct[i]) < current.indexOf(correct[j]);
-
-      if (correctBefore === currentBefore) {
-        score++;
-      }
+      const correctBefore = i < j;
+      const currentBefore = current.indexOf(correctNames[i]) < current.indexOf(correctNames[j]);
+      if (correctBefore === currentBefore) score++;
     }
   }
 
-  let message = "";
-  const pct = score / maxScore;
+  // Apply glow logic + reveal dates
+  items.forEach((el, index) => {
+    el.classList.remove("correct", "partial", "wrong");
 
-  if (pct === 1) {
-    message = "🦈 Perfect! Absolute manta ray historian.";
-  } else if (pct >= 0.75) {
-    message = "✅ Very close! Strong OSRS update knowledge.";
-  } else if (pct >= 0.5) {
-    message = "⚖️ Mixed results — you’ve got some of it down.";
-  } else {
-    message = "❌ Timeline in shambles — but that’s half the fun.";
-  }
+    const correctIndex = correctNames.indexOf(el.dataset.name);
+    const distance = Math.abs(correctIndex - index);
+
+    if (distance === 0) el.classList.add("correct");
+    else if (distance <= 2) el.classList.add("partial");
+    else el.classList.add("wrong");
+
+    const data = correctOrder.find(o => o.name === el.dataset.name);
+    el.querySelector("span").textContent = `${data.name} — ${data.date}`;
+  });
+
+  const pct = score / maxScore;
+  let message = "";
+
+  if (pct === 1) message = "🦈 Perfect! Absolute manta ray historian.";
+  else if (pct >= 0.75) message = "✅ Very close! Strong OSRS update knowledge.";
+  else if (pct >= 0.5) message = "⚖️ Mixed results — some solid instincts here.";
+  else message = "❌ Timeline in shambles — but that’s half the fun.";
 
   document.getElementById("result").innerHTML = `
     <div>${message}</div>
-    <div style="margin-top: 6px;">
-      Score: <strong>${score}</strong> / ${maxScore}
-    </div>
+    <div style="margin-top:6px;">Score: <strong>${score}</strong> / ${maxScore}</div>
   `;
 }
 </script>

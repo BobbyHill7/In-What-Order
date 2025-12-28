@@ -94,7 +94,6 @@ header h2 {
 }
 
 .correct { border-color:var(--green); box-shadow:0 0 10px var(--green); }
-.partial { border-color:var(--yellow); box-shadow:0 0 10px var(--yellow); }
 .wrong { border-color:var(--red); box-shadow:0 0 10px var(--red); }
 
 button {
@@ -147,11 +146,11 @@ button {
 <strong>How to Play</strong>
 <ul>
 <li>Order the updates from <strong>earliest → latest</strong></li>
-<li>Click <strong>Start Game</strong> to reveal items and begin the timer</li>
-<li>You have <strong>48 seconds</strong></li>
-<li>If your submission is not perfect, <strong>–5 seconds</strong> is applied once</li>
-<li>Bonus points are awarded for time remaining</li>
-<li>Dates are revealed only with a perfect order</li>
+<li>Click <strong>Start Game</strong> to reveal the items and start the timer</li>
+<li>The timer continues running until you get a <strong>perfect order</strong></li>
+<li>Each incorrect submission applies a <strong>–5 second penalty once</strong></li>
+<li>Your score is based on how much time remains</li>
+<li>Dates are revealed only after a perfect order</li>
 </ul>
 </div>
 
@@ -187,15 +186,17 @@ const data = [
   ["Larran’s Chest","June 2019","https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea"],
   ["Tempoross","March 2021","https://oldschool.runescape.wiki/images/Tempoross.png?12042"],
   ["Tombs of Amascut","August 2022","https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992"],
-  ["The Leviathan","July/August 2023","https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a"],
+  ["The Leviathan","July / August 2023","https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a"],
   ["Killing a Manta Ray","November 2025","https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30"]
 ];
 
-const list=document.getElementById("list");
-const timerEl=document.getElementById("timer");
-const scorecard=document.getElementById("scorecard");
+const list = document.getElementById("list");
+const timerEl = document.getElementById("timer");
+const scorecard = document.getElementById("scorecard");
 
-let time=48, interval, penaltyApplied=false;
+let time = 48;
+let interval;
+let gameOver = false;
 
 function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
 
@@ -210,54 +211,65 @@ function startGame(){
     el.innerHTML=`<img src="${d[2]}"><div>${d[0]}</div>`;
     list.appendChild(el);
   });
+
   list.style.display="block";
   startBtn.style.display="none";
   submitBtn.style.display="inline-block";
 
-  interval=setInterval(()=>{
+  interval = setInterval(()=>{
+    if(gameOver) return;
     time--;
     timerEl.textContent=time;
-    if(time<=0) submit();
+    if(time<=0){
+      endGame(false);
+    }
   },1000);
 
   enableDrag();
 }
 
 function submit(){
-  clearInterval(interval);
+  if(gameOver) return;
 
   const items=[...list.children];
-  let correct=true;
+  let perfect=true;
 
   items.forEach((el,i)=>{
-    el.classList.remove("correct","partial","wrong");
+    el.classList.remove("correct","wrong");
     if(el.dataset.name===correctOrder[i]){
       el.classList.add("correct");
     } else {
       el.classList.add("wrong");
-      correct=false;
+      perfect=false;
     }
   });
 
-  if(!correct && !penaltyApplied){
+  if(perfect){
+    endGame(true);
+  } else {
     time=Math.max(0,time-5);
-    penaltyApplied=true;
     timerEl.textContent=time;
+    if(time===0) endGame(false);
   }
+}
 
-  const score=Math.min(100,50+time);
+function endGame(won){
+  gameOver=true;
+  clearInterval(interval);
+  submitBtn.disabled=true;
+
+  const score = won ? Math.min(100,50+time) : 0;
   scorecard.style.display="block";
-  scorecard.innerHTML=`<h2>Score: ${score}/100</h2>`;
+  scorecard.innerHTML = won
+    ? `<h2>🏆 Score: ${score}/100</h2>`
+    : `<h2>⏱️ Time’s Up!</h2>`;
 
-  if(correct){
+  if(won){
     confetti();
-    items.forEach(el=>{
-      if(!el.querySelector(".date")){
-        const d=document.createElement("div");
-        d.className="date";
-        d.textContent=el.dataset.date;
-        el.appendChild(d);
-      }
+    [...list.children].forEach(el=>{
+      const d=document.createElement("div");
+      d.textContent=el.dataset.date;
+      el.appendChild(d);
     });
   }
 }

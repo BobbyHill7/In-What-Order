@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>In What Order? – Raw Manta Ray</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+    padding: 30px;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .description {
+    font-size: 1.15em;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+  }
+
+  .instructions {
+    text-align: center;
+    font-style: italic;
+    color: #cbd5f5;
+    margin-bottom: 20px;
+  }
+
+  .container {
+    max-width: 750px;
+    margin: auto;
+  }
+
+  .list {
+    border: 2px dashed #475569;
+    padding: 15px;
+    border-radius: 10px;
+    background: #020617;
+  }
+
+  .item {
+    display: flex;
+    align-items: center;
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 10px 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    cursor: grab;
+  }
+
+  .item img {
+    width: 42px;
+    height: 42px;
+    margin-right: 12px;
+    object-fit: contain;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px 0;
+    border-radius: 8px;
+    border: none;
+    background: #38bdf8;
+    color: #020617;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1em;
+  }
+
+  button:hover {
+    background: #0ea5e9;
+  }
+
+  #result {
+    margin-top: 18px;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1>In What Order? – Raw Manta Ray</h1>
+
+  <div class="description">
+    In what order of content updates did more sources for raw manta rays get added into the game?
+  </div>
+
+  <div class="instructions">
+    Sort the content updates in order of when they happened.
+  </div>
+
+  <div id="list" class="list"></div>
+
+  <button onclick="checkOrder()">Check Order</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+const correctOrder = [
+  {
+    text: "Fossil Island — September 2017",
+    img: "https://oldschool.runescape.wiki/w/Fossil_Island#/media/File:Fossil_Island_logo.png"
+  },
+  {
+    text: "Brimstone Chest — February 2019",
+    img: "https://oldschool.runescape.wiki/w/Brimstone_chest#/media/File:Brimstone_chest.png"
+  },
+  {
+    text: "The Mimic — April 2019",
+    img: "https://oldschool.runescape.wiki/w/The_Mimic#/media/File:The_Mimic.png"
+  },
+  {
+    text: "Larran’s Chest — June 2019",
+    img: "https://oldschool.runescape.wiki/w/Larran%27s_big_chest#/media/File:Larran's_big_chest.png"
+  },
+  {
+    text: "Tempoross — March 2021",
+    img: "https://oldschool.runescape.wiki/w/Tempoross#/media/File:Tempoross.png"
+  },
+  {
+    text: "Tombs of Amascut — August 2022",
+    img: "https://oldschool.runescape.wiki/w/Tombs_of_Amascut#/media/File:Tombs_of_Amascut.png"
+  },
+  {
+    text: "The Leviathan — July/August 2023",
+    img: "https://oldschool.runescape.wiki/w/The_Leviathan#/media/File:The_Leviathan.png"
+  },
+  {
+    text: "Killing a Manta Ray — November 2025",
+    img: "https://oldschool.runescape.wiki/w/Manta_ray_(monster)#/media/File:Manta_ray_(Sailing).png"
+  }
+];
+
+const list = document.getElementById("list");
+
+// Shuffle items on load
+const shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
+
+shuffled.forEach(item => {
+  const div = document.createElement("div");
+  div.className = "item";
+  div.draggable = true;
+  div.innerHTML = `<img src="${item.img}" alt="${item.text}"><span>${item.text}</span>`;
+  list.appendChild(div);
+});
+
+let draggedItem = null;
+
+// Drag logic
+document.addEventListener("dragstart", e => {
+  if (e.target.classList.contains("item")) {
+    draggedItem = e.target;
+  }
+});
+
+document.addEventListener("dragover", e => {
+  e.preventDefault();
+  const target = e.target.closest(".item");
+  if (target && target !== draggedItem) {
+    const rect = target.getBoundingClientRect();
+    const after = e.clientY - rect.top > rect.height / 2;
+    list.insertBefore(draggedItem, after ? target.nextSibling : target);
+  }
+});
+
+// Partial credit scoring
+function checkOrder() {
+  const current = [...list.children].map(el => el.textContent.trim());
+  const correct = correctOrder.map(o => o.text);
+
+  let score = 0;
+  let maxScore = 0;
+
+  for (let i = 0; i < correct.length; i++) {
+    for (let j = i + 1; j < correct.length; j++) {
+      maxScore++;
+
+      const correctBefore = correct.indexOf(correct[i]) < correct.indexOf(correct[j]);
+      const currentBefore = current.indexOf(correct[i]) < current.indexOf(correct[j]);
+
+      if (correctBefore === currentBefore) {
+        score++;
+      }
+    }
+  }
+
+  let message = "";
+  const pct = score / maxScore;
+
+  if (pct === 1) {
+    message = "🦈 Perfect! Absolute manta ray historian.";
+  } else if (pct >= 0.75) {
+    message = "✅ Very close! Strong OSRS update knowledge.";
+  } else if (pct >= 0.5) {
+    message = "⚖️ Mixed results — you’ve got some of it down.";
+  } else {
+    message = "❌ Timeline in shambles — but that’s half the fun.";
+  }
+
+  document.getElementById("result").innerHTML = `
+    <div>${message}</div>
+    <div style="margin-top: 6px;">
+      Score: <strong>${score}</strong> / ${maxScore}
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>

@@ -23,45 +23,38 @@ body {
   background:radial-gradient(circle at top,#1c3b4a,var(--bg));
   color:#fff;
   font-family:'Montserrat',sans-serif;
-  text-align:center;
 }
 
 header {
-  padding:24px;
+  text-align:center;
+  padding:18px;
   background:linear-gradient(135deg,#1fa2ff,var(--accent));
   color:#000;
 }
 
 header h1 {
   font-family:'Orbitron',sans-serif;
-  font-size:2.8rem;
   margin:0;
 }
 
 header h2 {
-  margin-top:6px;
-  font-weight:700;
+  margin:4px 0 0;
 }
 
-.container {
-  max-width:900px;
+.layout {
+  display:grid;
+  grid-template-columns:260px 1fr;
+  gap:16px;
+  max-width:1100px;
   margin:auto;
-  padding:20px;
+  padding:16px;
 }
 
 .instructions {
   background:var(--panel);
-  padding:16px;
+  padding:14px;
   border-radius:12px;
-  margin-bottom:16px;
-  text-align:left;
-}
-
-.timer {
-  font-family:'Orbitron',sans-serif;
-  font-size:2rem;
-  color:var(--accent);
-  margin:10px 0;
+  font-size:0.9rem;
 }
 
 .board {
@@ -70,17 +63,15 @@ header h2 {
   border-radius:16px;
 }
 
-.list {
-  display:none;
-}
+.list { display:none; }
 
 .item {
-  height:100px;
+  height:96px;
   display:flex;
   align-items:center;
-  gap:16px;
-  padding:12px;
-  margin:8px 0;
+  gap:14px;
+  padding:10px;
+  margin:6px 0;
   background:#0f2029;
   border-radius:10px;
   border:3px solid transparent;
@@ -88,32 +79,40 @@ header h2 {
 }
 
 .item img {
-  width:80px;
-  height:80px;
+  width:72px;
+  height:72px;
   object-fit:contain;
 }
 
 .correct { border-color:var(--green); box-shadow:0 0 10px var(--green); }
+.partial { border-color:var(--yellow); box-shadow:0 0 10px var(--yellow); }
 .wrong { border-color:var(--red); box-shadow:0 0 10px var(--red); }
 
 button {
   font-family:'Orbitron',sans-serif;
-  font-size:1.1rem;
-  padding:10px 26px;
+  padding:10px 22px;
   border:none;
-  border-radius:30px;
+  border-radius:24px;
   cursor:pointer;
   background:var(--accent);
-  margin:10px;
+  margin-top:10px;
 }
 
-.scorecard {
-  display:none;
-  margin-top:16px;
+.sticky {
+  position:fixed;
+  top:14px;
+  right:14px;
   background:#000;
-  padding:16px;
+  padding:12px 16px;
   border-radius:14px;
   font-family:'Orbitron',sans-serif;
+  text-align:center;
+  z-index:10;
+}
+
+.score {
+  margin-top:6px;
+  font-size:0.9rem;
 }
 
 .confetti span {
@@ -140,43 +139,38 @@ button {
   <h2>Raw Manta Ray</h2>
 </header>
 
-<div class="container">
+<div class="sticky">
+  ⏱ <span id="timer">48</span>
+  <div class="score" id="score">Score: —</div>
+</div>
+
+<div class="layout">
 
 <div class="instructions">
 <strong>How to Play</strong>
 <ul>
-<li>Order the updates from <strong>earliest → latest</strong></li>
-<li>Click <strong>Start Game</strong> to reveal the items and start the timer</li>
-<li>The timer continues running until you get a <strong>perfect order</strong></li>
-<li>Each incorrect submission applies a <strong>–5 second penalty once</strong></li>
-<li>Your score is based on how much time remains</li>
-<li>Dates are revealed only after a perfect order</li>
+<li>Order updates from <strong>earliest → latest</strong></li>
+<li>Green = correct position</li>
+<li>Yellow = correct relative order</li>
+<li>Red = incorrect order</li>
+<li>Timer runs until solved or time hits 0</li>
+<li>–5 seconds per incorrect submit</li>
+<li>Score = 50 + time remaining</li>
 </ul>
 </div>
 
-<div class="timer" id="timer">48</div>
-
 <div class="board">
-  <div class="list" id="list"></div>
-
+  <div id="list" class="list"></div>
   <button id="startBtn">START GAME</button>
   <button id="submitBtn" style="display:none;">SUBMIT</button>
 </div>
-
-<div class="scorecard" id="scorecard"></div>
 
 </div>
 
 <script>
 const correctOrder = [
-  "Fossil Island",
-  "Brimstone Chest",
-  "The Mimic",
-  "Larran’s Chest",
-  "Tempoross",
-  "Tombs of Amascut",
-  "The Leviathan",
-  "Killing a Manta Ray"
+  "Fossil Island","Brimstone Chest","The Mimic","Larran’s Chest",
+  "Tempoross","Tombs of Amascut","The Leviathan","Killing a Manta Ray"
 ];
 
 const data = [
@@ -190,18 +184,15 @@ const data = [
   ["Killing a Manta Ray","November 2025","https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30"]
 ];
 
-const list = document.getElementById("list");
-const timerEl = document.getElementById("timer");
-const scorecard = document.getElementById("scorecard");
+const list=document.getElementById("list");
+const timerEl=document.getElementById("timer");
+const scoreEl=document.getElementById("score");
 
-let time = 48;
-let interval;
-let gameOver = false;
+let time=48, interval, gameOver=false;
 
-function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 
 function startGame(){
-  list.innerHTML="";
   shuffle([...data]).forEach(d=>{
     const el=document.createElement("div");
     el.className="item";
@@ -216,13 +207,11 @@ function startGame(){
   startBtn.style.display="none";
   submitBtn.style.display="inline-block";
 
-  interval = setInterval(()=>{
+  interval=setInterval(()=>{
     if(gameOver) return;
     time--;
     timerEl.textContent=time;
-    if(time<=0){
-      endGame(false);
-    }
+    if(time<=0) endGame(false);
   },1000);
 
   enableDrag();
@@ -234,42 +223,48 @@ function submit(){
   const items=[...list.children];
   let perfect=true;
 
+  items.forEach(el=>el.classList.remove("correct","partial","wrong"));
+
   items.forEach((el,i)=>{
-    el.classList.remove("correct","wrong");
-    if(el.dataset.name===correctOrder[i]){
+    const name=el.dataset.name;
+    const correctIndex=correctOrder.indexOf(name);
+    if(correctIndex===i){
       el.classList.add("correct");
     } else {
-      el.classList.add("wrong");
+      let relativeCorrect=true;
+      items.forEach((other,j)=>{
+        const oName=other.dataset.name;
+        const ci=correctOrder.indexOf(name);
+        const oi=correctOrder.indexOf(oName);
+        if((ci<oi)!==(i<j)) relativeCorrect=false;
+      });
+      if(relativeCorrect) el.classList.add("partial");
+      else el.classList.add("wrong");
       perfect=false;
     }
   });
 
-  if(perfect){
-    endGame(true);
-  } else {
+  if(perfect) endGame(true);
+  else {
     time=Math.max(0,time-5);
     timerEl.textContent=time;
     if(time===0) endGame(false);
   }
 }
 
-function endGame(won){
+function endGame(win){
   gameOver=true;
   clearInterval(interval);
   submitBtn.disabled=true;
+  [...list.children].forEach(i=>i.draggable=false);
 
-  const score = won ? Math.min(100,50+time) : 0;
-  scorecard.style.display="block";
-  scorecard.innerHTML = won
-    ? `<h2>🏆 Score: ${score}/100</h2>`
-    : `<h2>⏱️ Time’s Up!</h2>`;
+  const score=Math.max(0,Math.min(100,50+time));
+  scoreEl.textContent=`Score: ${score}`;
 
-  if(won){
+  if(win){
     confetti();
     [...list.children].forEach(el=>{
-      const d=document.createElement("div");
-      d.textContent=el.dataset.date;
-      el.appendChild(d);
+      el.innerHTML+=`<div>${el.dataset.date}</div>`;
     });
   }
 }

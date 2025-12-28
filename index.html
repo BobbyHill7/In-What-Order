@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
-:root{
+:root {
   --bg:#0e1a22;
   --panel:#132733;
   --accent:#f2b705;
@@ -16,39 +16,36 @@
   --red:#e74c3c;
 }
 
-*{box-sizing:border-box}
+* { box-sizing:border-box; }
 
-body{
+body {
   margin:0;
   background:radial-gradient(circle at top,#1c3b4a,var(--bg));
   color:#fff;
   font-family:'Montserrat',sans-serif;
 }
 
-header{
+header {
   text-align:center;
   padding:16px;
   background:linear-gradient(135deg,#1fa2ff,var(--accent));
   color:#000;
 }
 
-header h1{
+header h1 {
   font-family:'Orbitron',sans-serif;
   margin:0;
 }
 
-.timer{
-  position:sticky;
-  top:0;
-  background:#000;
+.timer {
   font-family:'Orbitron',sans-serif;
-  font-size:3.2rem;
+  font-size:4rem;
   text-align:center;
-  padding:12px;
-  z-index:10;
+  padding:14px;
+  background:#000;
 }
 
-.layout{
+.layout {
   display:grid;
   grid-template-columns:260px 1fr;
   gap:16px;
@@ -57,22 +54,22 @@ header h1{
   padding:16px;
 }
 
-.instructions{
+.instructions {
   background:var(--panel);
   padding:14px;
   border-radius:12px;
   font-size:0.9rem;
 }
 
-.board{
+.board {
   background:var(--panel);
   padding:16px;
   border-radius:16px;
 }
 
-.list{display:none}
+.list { display:none; }
 
-.item{
+.item {
   height:96px;
   display:flex;
   align-items:center;
@@ -85,17 +82,17 @@ header h1{
   cursor:grab;
 }
 
-.item img{
+.item img {
   width:72px;
   height:72px;
   object-fit:contain;
 }
 
-.correct{border-color:var(--green);box-shadow:0 0 10px var(--green)}
-.partial{border-color:var(--yellow);box-shadow:0 0 10px var(--yellow)}
-.wrong{border-color:var(--red);box-shadow:0 0 10px var(--red)}
+.correct { border-color:var(--green); box-shadow:0 0 10px var(--green); }
+.partial { border-color:var(--yellow); box-shadow:0 0 10px var(--yellow); }
+.wrong   { border-color:var(--red);   box-shadow:0 0 10px var(--red); }
 
-button{
+button {
   font-family:'Orbitron',sans-serif;
   padding:10px 22px;
   border:none;
@@ -105,11 +102,10 @@ button{
   margin-top:10px;
 }
 
-.score{
-  text-align:center;
+.score {
+  margin-top:14px;
   font-family:'Orbitron',sans-serif;
   font-size:1.6rem;
-  margin-top:12px;
   display:none;
 }
 </style>
@@ -129,12 +125,12 @@ button{
 <div class="instructions">
 <strong>How to Play</strong>
 <ul>
-<li>Order updates from <strong>earliest → latest</strong></li>
-<li>Green = exact position</li>
-<li>Yellow = correct relative order</li>
-<li>Red = incorrect</li>
-<li>–5 seconds per incorrect submit</li>
-<li>Green + Yellow both score points</li>
+<li>Order updates from earliest → latest</li>
+<li>🟢 Exact position</li>
+<li>🟡 Correct relative order</li>
+<li>🔴 Incorrect</li>
+<li>Score decays by 1 every second</li>
+<li>Final score scales by correctness</li>
 </ul>
 </div>
 
@@ -148,48 +144,56 @@ button{
 </div>
 
 <script>
-const correctOrder=[
+const MAX_TIME = 48;
+const MAX_SCORE = 100;
+
+const correctOrder = [
   "Fossil Island","Brimstone Chest","The Mimic","Larran’s Chest",
   "Tempoross","Tombs of Amascut","The Leviathan","Killing a Manta Ray"
 ];
 
-const data=[
-["Fossil Island","September 2017","https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132"],
-["Brimstone Chest","February 2019","https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463"],
-["The Mimic","April 2019","https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4"],
-["Larran’s Chest","June 2019","https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea"],
-["Tempoross","March 2021","https://oldschool.runescape.wiki/images/Tempoross.png?12042"],
-["Tombs of Amascut","August 2022","https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992"],
-["The Leviathan","July / August 2023","https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a"],
-["Killing a Manta Ray","November 2025","https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30"]
+const data = [
+  ["Fossil Island","https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132"],
+  ["Brimstone Chest","https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463"],
+  ["The Mimic","https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4"],
+  ["Larran’s Chest","https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea"],
+  ["Tempoross","https://oldschool.runescape.wiki/images/Tempoross.png?12042"],
+  ["Tombs of Amascut","https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992"],
+  ["The Leviathan","https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a"],
+  ["Killing a Manta Ray","https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30"]
 ];
 
-const list=document.getElementById("list");
-const timerEl=document.getElementById("timer");
-const scoreEl=document.getElementById("score");
+const list = document.getElementById("list");
+const timerEl = document.getElementById("timer");
+const scoreEl = document.getElementById("score");
 
-let time=48,interval,gameOver=false,dragged;
+let time = MAX_TIME;
+let interval;
+let dragged;
 
-function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
 
-startBtn.onclick=()=>{
+startBtn.onclick = () => {
   shuffle([...data]).forEach(d=>{
     const el=document.createElement("div");
     el.className="item";
     el.draggable=true;
     el.dataset.name=d[0];
-    el.innerHTML=`<img src="${d[2]}"><div>${d[0]}</div>`;
+    el.innerHTML=`<img src="${d[1]}"><div>${d[0]}</div>`;
     list.appendChild(el);
   });
+
   list.style.display="block";
   startBtn.style.display="none";
   submitBtn.style.display="inline-block";
-  enableDrag();
+
   interval=setInterval(()=>{
     time--;
     timerEl.textContent=time;
-    if(time<=0) endGame();
+    if(time<=0) submit();
   },1000);
+
+  enableDrag();
 };
 
 function enableDrag(){
@@ -197,53 +201,52 @@ function enableDrag(){
   list.addEventListener("dragover",e=>{
     e.preventDefault();
     const target=e.target.closest(".item");
-    if(!target||target===dragged)return;
+    if(!target||target===dragged) return;
     const r=target.getBoundingClientRect();
     const after=e.clientY>r.top+r.height/2;
-    list.insertBefore(dragged,after?target.nextSibling:target);
+    list.insertBefore(dragged, after ? target.nextSibling : target);
   });
 }
 
-submitBtn.onclick=()=>{
-  if(gameOver)return;
-  let score=0;
+submitBtn.onclick = submit;
+
+function submit(){
+  clearInterval(interval);
+
   const items=[...list.children];
+  let correctCount=0;
+
   items.forEach(el=>el.classList.remove("correct","partial","wrong"));
 
   items.forEach((el,i)=>{
-    const ci=correctOrder.indexOf(el.dataset.name);
-    if(ci===i){
+    const ci = correctOrder.indexOf(el.dataset.name);
+    if(ci === i){
       el.classList.add("correct");
-      score+=12.5;
-    }else{
-      let ok=true;
-      items.forEach((o,j)=>{
-        const oi=correctOrder.indexOf(o.dataset.name);
-        if((ci<oi)!==(i<j)) ok=false;
-      });
-      if(ok){
-        el.classList.add("partial");
-        score+=12.5;
-      }else{
-        el.classList.add("wrong");
-      }
+      correctCount++;
+      return;
+    }
+
+    let relativeCorrect = true;
+    items.forEach((o,j)=>{
+      if(el===o) return;
+      const oi = correctOrder.indexOf(o.dataset.name);
+      if((ci < oi) !== (i < j)) relativeCorrect = false;
+    });
+
+    if(relativeCorrect){
+      el.classList.add("partial");
+      correctCount++;
+    } else {
+      el.classList.add("wrong");
     }
   });
 
-  time=Math.max(0,time-5);
-  timerEl.textContent=time;
-  score+=Math.floor(time/5);
+  const timeBasedMax = Math.max(0, MAX_SCORE - (MAX_TIME - time));
+  const correctnessRatio = correctCount / correctOrder.length;
+  const finalScore = Math.floor(timeBasedMax * correctnessRatio);
+
   scoreEl.style.display="block";
-  scoreEl.textContent=`Score: ${Math.min(100,Math.round(score))}`;
-
-  if(score>=100) endGame();
-};
-
-function endGame(){
-  gameOver=true;
-  clearInterval(interval);
-  [...list.children].forEach(i=>i.draggable=false);
-  submitBtn.disabled=true;
+  scoreEl.textContent = `Score: ${finalScore} / ${MAX_SCORE}`;
 }
 </script>
 

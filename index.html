@@ -39,14 +39,8 @@ header h1 {
 }
 
 header h2 {
-  margin:2px 0 4px;
+  margin:2px 0 0;
   font-size:0.95rem;
-}
-
-header p {
-  margin:0;
-  font-size:0.9rem;
-  font-weight:600;
 }
 
 .main {
@@ -70,6 +64,13 @@ header p {
   background:var(--panel);
   padding:10px;
   border-radius:12px;
+}
+
+.board h3 {
+  margin:0 0 8px;
+  font-size:0.95rem;
+  text-align:center;
+  font-weight:700;
 }
 
 .timer {
@@ -126,6 +127,25 @@ button {
   font-size:1.2rem;
   display:none;
 }
+
+/* 🎉 CONFETTI */
+.confetti {
+  position:fixed;
+  top:-12px;
+  width:8px;
+  height:8px;
+  background:var(--accent);
+  opacity:0.9;
+  pointer-events:none;
+  animation:confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform:translateY(110vh) rotate(360deg);
+    opacity:0;
+  }
+}
 </style>
 </head>
 
@@ -134,7 +154,6 @@ button {
 <header>
   <h1>In What Order?</h1>
   <h2>Raw Manta Ray</h2>
-  <p>In what order of content updates did more sources for raw manta rays get added into the game?</p>
 </header>
 
 <div class="main">
@@ -148,14 +167,17 @@ button {
 <li>🔴 Incorrect</li>
 <li>Timer runs until solved or time hits 0</li>
 <li>Incorrect submit: −5 seconds</li>
-<li>Score shown only at the end</li>
 </ul>
 </div>
 
 <div class="board">
+  <h3>In what order of content updates did more sources for raw manta rays get added into the game?</h3>
+
   <div id="list" class="list"></div>
+
   <button id="startBtn">START</button>
   <button id="submitBtn" style="display:none;">SUBMIT</button>
+
   <div class="score" id="score"></div>
 </div>
 
@@ -191,6 +213,7 @@ let time = MAX_TIME;
 let interval;
 let dragged;
 let gameOver = false;
+let confettiPlayed = false;
 
 function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
 
@@ -212,7 +235,7 @@ startBtn.onclick = () => {
     if(gameOver) return;
     time--;
     timerEl.textContent=time;
-    if(time<=0) endGame();
+    if(time<=0) endGame(false);
   },1000);
 
   enableDrag();
@@ -268,15 +291,30 @@ function evaluate(){
   });
 
   if(greenCount === items.length){
-    endGame();
+    endGame(true);
   } else {
     time = Math.max(0, time - 5);
     timerEl.textContent = time;
-    if(time === 0) endGame();
+    if(time === 0) endGame(false);
   }
 }
 
-function endGame(){
+function confettiBurst(){
+  if(confettiPlayed) return;
+  confettiPlayed = true;
+
+  for(let i=0;i<120;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.background=Math.random()>0.5?"#f2b705":"#1fa2ff";
+    c.style.animationDuration=(Math.random()*1.5+2)+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),3000);
+  }
+}
+
+function endGame(perfect){
   gameOver = true;
   clearInterval(interval);
 
@@ -289,6 +327,8 @@ function endGame(){
     }
     el.draggable=false;
   });
+
+  if(perfect) confettiBurst();
 
   const timeBasedMax = Math.max(0, MAX_SCORE - (MAX_TIME - time));
   const score = Math.floor(timeBasedMax * (correctish / items.length));

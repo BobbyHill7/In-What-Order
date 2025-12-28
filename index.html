@@ -4,266 +4,311 @@
 <meta charset="UTF-8">
 <title>In What Order? – Raw Manta Ray</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+
 <style>
-  :root {
-    --bg-dark: #1e2a3a;
-    --bg-panel: #28344b;
-    --yellow: #ffd700;
-    --blue: #60a5fa;
-    --text: #f3f4f6;
-  }
+:root {
+  --bg: #0e1a22;
+  --panel: #132733;
+  --accent: #f2b705;
+  --blue: #1fa2ff;
+  --green: #2ecc71;
+  --yellow: #f1c40f;
+  --red: #e74c3c;
+}
 
-  body {
-    font-family: "Trebuchet MS", Arial, sans-serif;
-    background: var(--bg-dark);
-    color: var(--text);
-    padding: 22px;
-  }
+* { box-sizing: border-box; }
 
-  .container {
-    max-width: 780px;
-    margin: auto;
-  }
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1c3b4a, var(--bg));
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+}
 
-  /* GAME SHOW HEADER */
-  .header {
-    text-align: center;
-    background: linear-gradient(90deg, var(--yellow), #ffef8a);
-    color: #1b1b1b;
-    padding: 18px 10px;
-    border-radius: 14px;
-    box-shadow: 0 6px 0 #bfa600;
-    margin-bottom: 20px;
-  }
+header {
+  padding: 30px 20px;
+  background: linear-gradient(135deg, var(--blue), var(--accent));
+  color: #000;
+}
 
-  .header h1 {
-    margin: 0;
-    font-size: 2.6em;
-    letter-spacing: 1px;
-  }
+header h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 3rem;
+  margin: 0;
+}
 
-  .header h2 {
-    margin: 6px 0 0;
-    font-size: 1.3em;
-    font-weight: bold;
-  }
+header h2 {
+  margin: 8px 0 0;
+  font-weight: 700;
+}
 
-  .description {
-    text-align: center;
-    margin-bottom: 6px;
-  }
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px 20px;
+}
 
-  .instructions {
-    text-align: center;
-    font-style: italic;
-    color: #c7d2fe;
-    margin-bottom: 10px;
-  }
+.instructions {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: left;
+}
 
-  /* SORTING BOARD */
-  .list {
-    border: 3px solid var(--yellow);
-    background: var(--bg-panel);
-    border-radius: 14px;
-    padding: 6px 12px; /* reduced vertical padding */
-    box-shadow: 0 0 20px rgba(255,215,0,0.15);
-  }
+.instructions ul {
+  padding-left: 20px;
+}
 
-  .item {
-    display: flex;
-    align-items: center;
-    background: #1f293b;
-    border: 2px solid #334155;
-    padding: 6px 12px;
-    margin: 6px 0;
-    border-radius: 10px;
-    cursor: grab;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
+.timer {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  margin: 15px 0;
+  color: var(--accent);
+}
 
-  .item img {
-    width: 42px;
-    height: 42px;
-    margin-right: 12px;
-    object-fit: contain;
-  }
+.board {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+}
 
-  /* GLOW STATES */
-  .correct {
-    border-color: #22c55e;
-    box-shadow: 0 0 14px #22c55e;
-  }
+.list {
+  display: none;
+}
 
-  .partial {
-    border-color: #facc15;
-    box-shadow: 0 0 14px #facc15;
-  }
+.item {
+  background: #0f2029;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: grab;
+  border: 3px solid transparent;
+  transition: 0.3s;
+}
 
-  .wrong {
-    border-color: #ef4444;
-    box-shadow: 0 0 14px #ef4444;
-  }
+.item:active { cursor: grabbing; }
 
-  button {
-    width: 100%;
-    margin-top: 18px;
-    padding: 14px 0;
-    border-radius: 10px;
-    border: none;
-    background: var(--yellow);
-    color: #1b1b1b;
-    font-weight: bold;
-    font-size: 1.1em;
-    cursor: pointer;
-    box-shadow: 0 5px 0 #bfa600;
-  }
+.item img {
+  width: 80px;
+  height: auto;
+}
 
-  button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 0 #bfa600;
-  }
+.correct { border-color: var(--green); box-shadow: 0 0 15px var(--green); }
+.partial { border-color: var(--yellow); box-shadow: 0 0 15px var(--yellow); }
+.wrong { border-color: var(--red); box-shadow: 0 0 15px var(--red); }
 
-  #result {
-    margin-top: 16px;
-    text-align: center;
-    font-size: 1.15em;
-  }
+.buttons {
+  margin-top: 20px;
+}
 
-  /* CONFETTI */
-  .confetti {
-    position: fixed;
-    top: -10px;
-    width: 10px;
-    height: 10px;
-    background: var(--yellow);
-    animation: fall 3s linear forwards;
-  }
+button {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.2rem;
+  padding: 12px 30px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  margin: 10px;
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
 
-  @keyframes fall {
-    to {
-      transform: translateY(110vh) rotate(360deg);
-      opacity: 0;
-    }
+button:hover { transform: scale(1.05); }
+
+.scorecard {
+  display: none;
+  margin-top: 25px;
+  background: #000;
+  padding: 20px;
+  border-radius: 15px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.confetti span {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  animation: fall 3s linear forwards;
+}
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
   }
+}
 </style>
 </head>
 
 <body>
+
+<header>
+  <h1>In What Order?</h1>
+  <h2>Raw Manta Ray</h2>
+</header>
+
 <div class="container">
 
-  <div class="header">
-    <h1>In What Order?</h1>
-    <h2>Raw Manta Ray</h2>
-  </div>
-
-  <div class="description">
-    In what order of content updates did more sources for raw manta rays get added into the game?
-  </div>
-
-  <div class="instructions">
-    Sort the content updates from <strong>earliest to latest</strong>.
-  </div>
-
-  <div id="list" class="list"></div>
-
-  <button onclick="checkOrder()">Reveal Results</button>
-
-  <div id="result"></div>
+<div class="instructions">
+<strong>Question:</strong><br>
+In what order of content updates did more sources for raw manta rays get added into the game?
+<ul>
+<li>Order from <strong>earliest → latest</strong></li>
+<li>You have <strong>48 seconds</strong></li>
+<li>–5 seconds per incorrect placement</li>
+<li>Bonus points for time remaining</li>
+<li>Get a perfect score to reveal the dates</li>
+</ul>
 </div>
 
+<div class="timer" id="timer">48</div>
+
+<div class="board">
+  <div class="list" id="list"></div>
+
+  <div class="buttons">
+    <button id="startBtn">START GAME</button>
+    <button id="submitBtn" style="display:none;">SUBMIT ANSWER</button>
+  </div>
+</div>
+
+<div class="scorecard" id="scorecard"></div>
+
+</div>
+
+<div class="confetti" id="confetti"></div>
+
+<audio id="music" src="music.mp3"></audio>
+
 <script>
-const correctOrder = [
-  { name: "Fossil Island", date: "September 2017", img: "https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132" },
-  { name: "Brimstone Chest", date: "February 2019", img: "https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463" },
-  { name: "The Mimic", date: "April 2019", img: "https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4" },
-  { name: "Larran’s Chest", date: "June 2019", img: "https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea" },
-  { name: "Tempoross", date: "March 2021", img: "https://oldschool.runescape.wiki/images/Tempoross.png?12042" },
-  { name: "Tombs of Amascut", date: "August 2022", img: "https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992" },
-  { name: "The Leviathan", date: "July / August 2023", img: "https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a" },
-  { name: "Killing a Manta Ray", date: "November 2025", img: "https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30" }
+const updates = [
+  { name:"Fossil Island", date:"September 2017", img:"https://oldschool.runescape.wiki/images/Fossil_Island_logo.png?f8132" },
+  { name:"Brimstone Chest", date:"February 2019", img:"https://oldschool.runescape.wiki/images/Brimstone_chest.png?23463" },
+  { name:"The Mimic", date:"April 2019", img:"https://oldschool.runescape.wiki/images/thumb/The_Mimic.png/1024px-The_Mimic.png?b45f4" },
+  { name:"Larran’s Chest", date:"June 2019", img:"https://oldschool.runescape.wiki/images/Larran%27s_big_chest.png?eb3ea" },
+  { name:"Tempoross", date:"March 2021", img:"https://oldschool.runescape.wiki/images/Tempoross.png?12042" },
+  { name:"Tombs of Amascut", date:"August 2022", img:"https://oldschool.runescape.wiki/images/Tombs_of_Amascut.png?f9992" },
+  { name:"The Leviathan", date:"July/August 2023", img:"https://oldschool.runescape.wiki/images/The_Leviathan.png?d588a" },
+  { name:"Killing a Manta Ray", date:"November 2025", img:"https://oldschool.runescape.wiki/images/Manta_ray_%28Sailing%29.png?80b30" }
 ];
 
 const list = document.getElementById("list");
-const shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
+const timerEl = document.getElementById("timer");
+const scorecard = document.getElementById("scorecard");
+const music = document.getElementById("music");
 
-shuffled.forEach(item => {
-  const div = document.createElement("div");
-  div.className = "item";
-  div.draggable = true;
-  div.dataset.name = item.name;
-  div.innerHTML = `<img src="${item.img}"><span>${item.name}</span>`;
-  list.appendChild(div);
-});
+let time = 48;
+let interval;
 
-let draggedItem = null;
-
-document.addEventListener("dragstart", e => {
-  if (e.target.classList.contains("item")) draggedItem = e.target;
-});
-
-document.addEventListener("dragover", e => {
-  e.preventDefault();
-  const target = e.target.closest(".item");
-  if (target && target !== draggedItem) {
-    const rect = target.getBoundingClientRect();
-    const after = e.clientY - rect.top > rect.height / 2;
-    list.insertBefore(draggedItem, after ? target.nextSibling : target);
-  }
-});
-
-function confettiBurst() {
-  for (let i = 0; i < 120; i++) {
-    const c = document.createElement("div");
-    c.className = "confetti";
-    c.style.left = Math.random() * 100 + "vw";
-    c.style.background = Math.random() > 0.5 ? "#ffd700" : "#60a5fa";
-    c.style.animationDuration = (Math.random() * 1.5 + 2) + "s";
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 3000);
-  }
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
 }
 
-function checkOrder() {
+function startGame() {
+  shuffle(updates);
+  list.innerHTML = "";
+  updates.forEach(u => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.draggable = true;
+    div.dataset.name = u.name;
+    div.innerHTML = `<img src="${u.img}"><div>${u.name}</div>`;
+    list.appendChild(div);
+  });
+
+  list.style.display = "block";
+  document.getElementById("startBtn").style.display = "none";
+  document.getElementById("submitBtn").style.display = "inline-block";
+
+  music.play();
+  interval = setInterval(() => {
+    time--;
+    timerEl.textContent = time;
+    if (time <= 0) submit();
+  }, 1000);
+
+  enableDrag();
+}
+
+function submit() {
+  clearInterval(interval);
+  music.pause();
+
   const items = [...list.children];
-  const current = items.map(el => el.dataset.name);
-  const correctNames = correctOrder.map(o => o.name);
+  let penalty = 0;
+  let correctCount = 0;
 
-  let score = 0;
-  let maxScore = 0;
+  items.forEach((el, i) => {
+    const correctIndex = updates.findIndex(u => u.name === el.dataset.name);
+    const leftOk = i === 0 || correctIndex > updates.findIndex(u => u.name === items[i-1]?.dataset.name);
+    const rightOk = i === items.length-1 || correctIndex < updates.findIndex(u => u.name === items[i+1]?.dataset.name);
 
-  for (let i = 0; i < correctNames.length; i++) {
-    for (let j = i + 1; j < correctNames.length; j++) {
-      maxScore++;
-      const correctBefore = i < j;
-      const currentBefore = current.indexOf(correctNames[i]) < current.indexOf(correctNames[j]);
-      if (correctBefore === currentBefore) score++;
-    }
-  }
+    el.classList.remove("correct","partial","wrong");
 
-  const perfect = score === maxScore;
-
-  items.forEach((el, index) => {
-    el.classList.remove("correct", "partial", "wrong");
-    const correctIndex = correctNames.indexOf(el.dataset.name);
-    const dist = Math.abs(correctIndex - index);
-
-    if (dist === 0) el.classList.add("correct");
-    else if (dist <= 2) el.classList.add("partial");
-    else el.classList.add("wrong");
-
-    if (perfect) {
-      const data = correctOrder.find(o => o.name === el.dataset.name);
-      el.querySelector("span").textContent = `${data.name} — ${data.date}`;
+    if (leftOk && rightOk) {
+      el.classList.add("correct");
+      correctCount++;
+    } else if (leftOk || rightOk) {
+      el.classList.add("partial");
+      penalty += 5;
+    } else {
+      el.classList.add("wrong");
+      penalty += 5;
     }
   });
 
-  if (perfect) {
-    confettiBurst();
-    result.innerHTML = "🏆 PERFECT! You nailed the entire timeline!";
-  } else {
-    result.innerHTML = `Score: <strong>${score}</strong> / ${maxScore}<br>Get them all right to reveal the dates!`;
+  time = Math.max(0, time - penalty);
+  const score = 50 + time;
+
+  scorecard.style.display = "block";
+  scorecard.innerHTML = `<h2>SCORE: ${score} / 100</h2><p>Time Bonus: ${time}</p>`;
+
+  if (correctCount === updates.length) {
+    confetti();
+    items.forEach(el => {
+      const u = updates.find(x => x.name === el.dataset.name);
+      el.innerHTML += `<div>${u.date}</div>`;
+    });
   }
 }
+
+function enableDrag() {
+  let drag;
+  list.addEventListener("dragstart", e => drag = e.target);
+  list.addEventListener("dragover", e => e.preventDefault());
+  list.addEventListener("drop", e => {
+    if (e.target.classList.contains("item")) {
+      list.insertBefore(drag, e.target.nextSibling);
+    }
+  });
+}
+
+function confetti() {
+  const c = document.getElementById("confetti");
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement("span");
+    s.style.left = Math.random()*100+"vw";
+    s.style.background = `hsl(${Math.random()*360},100%,50%)`;
+    c.appendChild(s);
+    setTimeout(()=>s.remove(),3000);
+  }
+}
+
+document.getElementById("startBtn").onclick = startGame;
+document.getElementById("submitBtn").onclick = submit;
 </script>
 
 </body>

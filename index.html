@@ -26,86 +26,95 @@ body {
 }
 
 header {
+  padding:10px;
   text-align:center;
-  padding:16px;
   background:linear-gradient(135deg,#1fa2ff,var(--accent));
   color:#000;
 }
 
 header h1 {
   font-family:'Orbitron',sans-serif;
+  font-size:1.6rem;
   margin:0;
 }
 
-.timer {
-  font-family:'Orbitron',sans-serif;
-  font-size:4rem;
-  text-align:center;
-  padding:14px;
-  background:#000;
+header h2 {
+  margin:0;
+  font-size:1rem;
 }
 
-.layout {
+.main {
   display:grid;
-  grid-template-columns:260px 1fr;
-  gap:16px;
-  max-width:1100px;
+  grid-template-columns:240px 1fr 140px;
+  gap:12px;
+  max-width:1200px;
   margin:auto;
-  padding:16px;
+  padding:12px;
 }
 
 .instructions {
   background:var(--panel);
-  padding:14px;
-  border-radius:12px;
-  font-size:0.9rem;
+  padding:10px;
+  border-radius:10px;
+  font-size:0.85rem;
 }
 
 .board {
   background:var(--panel);
-  padding:16px;
-  border-radius:16px;
+  padding:12px;
+  border-radius:12px;
+}
+
+.timer {
+  position:sticky;
+  top:12px;
+  background:#000;
+  font-family:'Orbitron',sans-serif;
+  font-size:3rem;
+  text-align:center;
+  padding:12px;
+  border-radius:12px;
 }
 
 .list { display:none; }
 
 .item {
-  height:96px;
+  height:84px;
   display:flex;
   align-items:center;
-  gap:14px;
-  padding:10px;
+  gap:12px;
+  padding:8px;
   margin:6px 0;
   background:#0f2029;
-  border-radius:10px;
+  border-radius:8px;
   border:3px solid transparent;
   cursor:grab;
 }
 
 .item img {
-  width:72px;
-  height:72px;
+  width:64px;
+  height:64px;
   object-fit:contain;
 }
 
-.correct { border-color:var(--green); box-shadow:0 0 10px var(--green); }
-.partial { border-color:var(--yellow); box-shadow:0 0 10px var(--yellow); }
-.wrong   { border-color:var(--red);   box-shadow:0 0 10px var(--red); }
+.correct { border-color:var(--green); box-shadow:0 0 8px var(--green); }
+.partial { border-color:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+.wrong   { border-color:var(--red);   box-shadow:0 0 8px var(--red); }
 
 button {
   font-family:'Orbitron',sans-serif;
-  padding:10px 22px;
+  padding:8px 18px;
   border:none;
-  border-radius:24px;
+  border-radius:20px;
   cursor:pointer;
   background:var(--accent);
   margin-top:10px;
 }
 
 .score {
-  margin-top:14px;
+  margin-top:10px;
   font-family:'Orbitron',sans-serif;
-  font-size:1.6rem;
+  font-size:1.4rem;
   display:none;
 }
 </style>
@@ -118,28 +127,29 @@ button {
   <h2>Raw Manta Ray</h2>
 </header>
 
-<div class="timer" id="timer">48</div>
-
-<div class="layout">
+<div class="main">
 
 <div class="instructions">
 <strong>How to Play</strong>
 <ul>
-<li>Order updates from earliest → latest</li>
+<li>Order updates from <b>earliest → latest</b></li>
 <li>🟢 Exact position</li>
-<li>🟡 Correct relative order</li>
+<li>🟡 Correct relative order (neighbors)</li>
 <li>🔴 Incorrect</li>
-<li>Score decays by 1 every second</li>
-<li>Final score scales by correctness</li>
+<li>Timer decreases every second</li>
+<li>Incorrect submit: −5 seconds</li>
+<li>Game ends on perfect order or time out</li>
 </ul>
 </div>
 
 <div class="board">
   <div id="list" class="list"></div>
-  <button id="startBtn">START GAME</button>
+  <button id="startBtn">START</button>
   <button id="submitBtn" style="display:none;">SUBMIT</button>
   <div class="score" id="score"></div>
 </div>
+
+<div class="timer" id="timer">48</div>
 
 </div>
 
@@ -170,6 +180,7 @@ const scoreEl = document.getElementById("score");
 let time = MAX_TIME;
 let interval;
 let dragged;
+let gameOver = false;
 
 function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
 
@@ -188,9 +199,10 @@ startBtn.onclick = () => {
   submitBtn.style.display="inline-block";
 
   interval=setInterval(()=>{
+    if(gameOver) return;
     time--;
     timerEl.textContent=time;
-    if(time<=0) submit();
+    if(time<=0) endGame();
   },1000);
 
   enableDrag();
@@ -200,6 +212,7 @@ function enableDrag(){
   list.addEventListener("dragstart",e=>dragged=e.target);
   list.addEventListener("dragover",e=>{
     e.preventDefault();
+    if(gameOver) return;
     const target=e.target.closest(".item");
     if(!target||target===dragged) return;
     const r=target.getBoundingClientRect();
@@ -208,13 +221,13 @@ function enableDrag(){
   });
 }
 
-submitBtn.onclick = submit;
+submitBtn.onclick = evaluate;
 
-function submit(){
-  clearInterval(interval);
+function evaluate(){
+  if(gameOver) return;
 
   const items=[...list.children];
-  let correctCount=0;
+  let greenCount=0;
 
   items.forEach(el=>el.classList.remove("correct","partial","wrong"));
 
@@ -222,31 +235,56 @@ function submit(){
     const ci = correctOrder.indexOf(el.dataset.name);
     if(ci === i){
       el.classList.add("correct");
-      correctCount++;
+      greenCount++;
       return;
     }
 
-    let relativeCorrect = true;
-    items.forEach((o,j)=>{
-      if(el===o) return;
-      const oi = correctOrder.indexOf(o.dataset.name);
-      if((ci < oi) !== (i < j)) relativeCorrect = false;
-    });
+    let okPrev = true, okNext = true;
 
-    if(relativeCorrect){
+    if(i>0){
+      const prevIdx = correctOrder.indexOf(items[i-1].dataset.name);
+      okPrev = prevIdx < ci;
+    }
+    if(i<items.length-1){
+      const nextIdx = correctOrder.indexOf(items[i+1].dataset.name);
+      okNext = ci < nextIdx;
+    }
+
+    if(okPrev && okNext){
       el.classList.add("partial");
-      correctCount++;
     } else {
       el.classList.add("wrong");
     }
   });
 
+  if(greenCount === items.length){
+    endGame();
+  } else {
+    time = Math.max(0, time - 5);
+    timerEl.textContent = time;
+    if(time === 0) endGame();
+  }
+}
+
+function endGame(){
+  gameOver = true;
+  clearInterval(interval);
+
+  const items=[...list.children];
+  let correctish = 0;
+
+  items.forEach(el=>{
+    if(el.classList.contains("correct") || el.classList.contains("partial")){
+      correctish++;
+    }
+    el.draggable=false;
+  });
+
   const timeBasedMax = Math.max(0, MAX_SCORE - (MAX_TIME - time));
-  const correctnessRatio = correctCount / correctOrder.length;
-  const finalScore = Math.floor(timeBasedMax * correctnessRatio);
+  const score = Math.floor(timeBasedMax * (correctish / items.length));
 
   scoreEl.style.display="block";
-  scoreEl.textContent = `Score: ${finalScore} / ${MAX_SCORE}`;
+  scoreEl.textContent = `Score: ${score} / ${MAX_SCORE}`;
 }
 </script>
 

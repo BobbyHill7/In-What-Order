@@ -15,9 +15,9 @@
 
   body {
     font-family: "Trebuchet MS", Arial, sans-serif;
-    background: radial-gradient(circle at top, #2b3a55, var(--bg-dark));
+    background: var(--bg-dark);
     color: var(--text);
-    padding: 30px;
+    padding: 22px;
   }
 
   .container {
@@ -60,13 +60,6 @@
     margin-bottom: 10px;
   }
 
-  .direction {
-    text-align: center;
-    font-weight: bold;
-    color: var(--blue);
-    margin-bottom: 6px;
-  }
-
   /* SORTING BOARD */
   .list {
     border: 3px solid var(--yellow);
@@ -81,7 +74,7 @@
     align-items: center;
     background: #1f293b;
     border: 2px solid #334155;
-    padding: 8px 12px;
+    padding: 6px 12px;
     margin: 6px 0;
     border-radius: 10px;
     cursor: grab;
@@ -169,10 +162,6 @@
 
   <div class="instructions">
     Sort the content updates from <strong>earliest to latest</strong>.
-  </div>
-
-  <div class="direction">
-    ⬆️ Earliest &nbsp; → &nbsp; Latest ⬇️
   </div>
 
   <div id="list" class="list"></div>

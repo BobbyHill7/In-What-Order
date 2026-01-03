@@ -300,6 +300,10 @@ submitBtn.onclick = () => {
   
     el.classList.add(okPrev && okNext ? "partial" : "wrong");
   });
+  
+  if(correctPairs===totalPairs){
+    endGame(true);
+  }
 };
 
 function endGame(perfect){

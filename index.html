@@ -164,7 +164,6 @@ button {
 <li>🟢 Exact position</li>
 <li>🟡 Correct relative order</li>
 <li>🔴 Incorrect</li>
-<li>Incorrect submit: −5 seconds</li>
 </ul>
 </div>
 
@@ -298,10 +297,6 @@ submitBtn.onclick = () => {
 
   if(correctPairs===totalPairs){
     endGame(true);
-  } else {
-    time=Math.max(0,time-5);
-    timerEl.textContent=time;
-    if(time===0) endGame(false);
   }
 };
 

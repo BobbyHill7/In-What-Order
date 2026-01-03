@@ -278,26 +278,28 @@ submitBtn.onclick = () => {
 
   [...list.children].forEach((el,i)=>{
     el.classList.remove("correct","partial","wrong");
-    const name=el.dataset.name;
-    const correctIdx=correctOrder.indexOf(name);
-
-    if(correctIdx===i){
+    const name = el.dataset.name;
+    const correctIdx = correctOrder.indexOf(name);
+  
+    if (correctIdx === i) {
       el.classList.add("correct");
-    } else {
-      let ok=true;
-      for(const other of correctOrder){
-        if(other===name) continue;
-        const a = correctIdx < correctOrder.indexOf(other);
-        const b = items.indexOf(name) < items.indexOf(other);
-        if(a!==b) ok=false;
-      }
-      el.classList.add(ok?"partial":"wrong");
+      return;
     }
+  
+    let okPrev = true, okNext = true;
+  
+    if (i > 0) {
+      const prevName = list.children[i-1].dataset.name;
+      okPrev = correctOrder.indexOf(prevName) < correctIdx;
+    }
+  
+    if (i < list.children.length - 1) {
+      const nextName = list.children[i+1].dataset.name;
+      okNext = correctIdx < correctOrder.indexOf(nextName);
+    }
+  
+    el.classList.add(okPrev && okNext ? "partial" : "wrong");
   });
-
-  if(correctPairs===totalPairs){
-    endGame(true);
-  }
 };
 
 function endGame(perfect){
